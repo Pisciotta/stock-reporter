@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/stock-reporter/static/css/main.f7025214.css",
+    "main.js": "/stock-reporter/static/js/main.f7d0c028.js",
+    "static/js/787.c1112931.chunk.js": "/stock-reporter/static/js/787.c1112931.chunk.js",
+    "index.html": "/stock-reporter/index.html",
+    "main.f7025214.css.map": "/stock-reporter/static/css/main.f7025214.css.map",
+    "main.f7d0c028.js.map": "/stock-reporter/static/js/main.f7d0c028.js.map",
+    "787.c1112931.chunk.js.map": "/stock-reporter/static/js/787.c1112931.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f7025214.css",
+    "static/js/main.f7d0c028.js"
+  ]
+}
