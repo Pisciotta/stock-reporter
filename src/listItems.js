@@ -3,18 +3,21 @@ import { Box, Link, Tooltip   } from '@mui/material';
 import { filterByValue } from './foo'
 import { folder2category, backend_server } from './constants';
 
+/*
 export const getTickers = async () => {
     return await fetch(backend_server+"get/list/company").then((response) => response.json());
 };
+*/
 
 export const getAllTickers = async () => {
-    return await fetch(backend_server+"get/list").then((response) => response.json());
+    return await fetch(backend_server+"cache/search.json").then((response) => response.json());
 };
 
 export function QueryResultHTML(props){
-    const matches = filterByValue(props.tickers, props.query );
+    const matches = filterByValue(props.tickers, props.query);
     
     const columns = [
+        /*
         {
             field: 'folder',
             headerName: 'Category',
@@ -24,8 +27,8 @@ export function QueryResultHTML(props){
                  <span className="table-cell-trucate">{folder2category(params.value)}</span>
                  </Tooltip>
             )
-            /**/
-        },
+            
+        },*/
         {
           field: 'id',
           headerName: 'Symbol',

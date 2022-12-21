@@ -6,10 +6,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { List } from '@mui/material';
 import { useState, useEffect } from "react";
-import Stack from '@mui/material/Stack';
-import Autocomplete from '@mui/material/Autocomplete';
-import DoubleArrowOutlinedIcon from '@mui/icons-material/DoubleArrowOutlined';
-import { TailSpin   } from 'react-loading-icons'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import Divider from '@mui/material/Divider';
@@ -18,15 +14,8 @@ import CardContent from '@mui/material/CardContent';
 
 
 export const getReport = async (tickerName) => {
+    
     return await fetch(backend_server+"report/"+tickerName).then((response) => response.json());
-};
-
-const correlate = async(ticker1, ticker2) => {
-    return await fetch(backend_server+"corr/"+ticker1+"/"+ticker2).then((response) => response.json());
-};
-
-const add_company_to_requested = async(ticker) => {
-    return await fetch(backend_server+"add/requested/"+company_folder+"/"+ticker).then((response) => response.json());
 };
 
 function printThumb(value){
@@ -35,7 +24,7 @@ function printThumb(value){
     }else if(value == false){
         return <Tooltip title="False. Condition is not met."><Chip color="error" label="F" /></Tooltip>
     }else if(value == null){
-        return <Tooltip title="No data available about this condition."><Chip color="warning" label="Unknown" /></Tooltip>
+        return <Tooltip title="No data available about this condition."><Chip color="warning" label="?" /></Tooltip>
     }else{
         return <Chip  label={value+" $"} size="small"/>
     }
@@ -83,53 +72,8 @@ function printCorrelationListItems(props, nDays, onlyLast){
     );
 }
 
-function CorrResultHTML(props){
-    return (
-        <Card variant="outlined">
-
-                
-            <CardContent>
-                Based on last {props.corrResult.totCandles} daily candles:
-                <List>
-                    <ListItem>
-                        <span>Historical probability for {props.t1} and {props.t2} to have less correlated ("similar") 5-Days-Trends is <Chip  size="small" label={Number(100*props.corrResult["5DaysCorr"].prLess).toFixed(2)+"%"} />.</span>
-                    </ListItem>
-                    <ListItem>According to the historical correlation with {props.t2}, next trends of {props.t1} will be:</ListItem>
-                    <ListItem>
-                        <List>
-                        { printCorrelationListItems(props, 5, false) }
-                        { printCorrelationListItems(props, 6, false) }
-                        { printCorrelationListItems(props, 7, false) }
-                        { printCorrelationListItems(props, 8, false) }
-                        { printCorrelationListItems(props, 9, false) }
-                        { printCorrelationListItems(props, 10, false) }
-                        </List>
-                    </ListItem>
-                </List>
-                Based on last 90 candles:
-                <List>
-                <ListItem>
-                        <span>Historical probability for {props.t1} and {props.t2} to have a less correlated 5-Days-Trends is <Chip label={Number(100*props.corrResult["5DaysCorrLast90Days"].prLess).toFixed(2)+"%"} size="small" /></span>.
-                    </ListItem>
-                    <ListItem>According to the historical correlation with {props.t2}:</ListItem>
-                    <ListItem>
-                        <List>
-                        { printCorrelationListItems(props, 5, 90) }
-                        { printCorrelationListItems(props, 6, 90) }
-                        { printCorrelationListItems(props, 7, 90) }
-                        { printCorrelationListItems(props, 8, 90) }
-                        { printCorrelationListItems(props, 9, 90) }
-                        { printCorrelationListItems(props, 10, 90) }
-                        </List>
-                    </ListItem>
-                </List>
-            </CardContent>
-        </Card>
-        );
-}
-
 function StatsListItemHTML(props){
-    const tot = props.props.props.report[0].stats[props.Index].TOT
+    const tot = props.props.props.report.stats[props.Index].TOT
     if(props.Index=="0"){
         var label = "for the same day of the week.";
     }else if(props.Index == "1"){
@@ -139,7 +83,7 @@ function StatsListItemHTML(props){
     }
     if(tot>0){
         return (
-            <ListItem><span><Chip  size="small" label={Number(100*props.props.props.report[0].stats[props.Index][props.ABCD]).toFixed(2)+"%"} /> based on {tot} candles {label}</span></ListItem>
+            <ListItem><span><Chip  size="small" label={Number(100*props.props.props.report.stats[props.Index][props.ABCD]).toFixed(2)+"%"} /> based on {tot} candles {label}</span></ListItem>
         );
     }else{
         return (
@@ -181,40 +125,38 @@ function SectionTitleHTML(props){
 }
 
 export function ReportHTML(props){
-    const [corrTicker, setCorrTicker] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [corrResult, setCorrResult] = useState(null);
-    const [addRequested, setAddRequested] = useState(null);
+    //const now = new Date()
+    //const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+    //const splitted = props.report.lastUpdate.split(" ");
+    //const last_update = new Date(splitted[1]+" "+splitted[0]+", "+splitted[2]);
 
-    const now = new Date()
-    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
-    const splitted = props.report[0].lastUpdate.split(" ");
-    const last_update = new Date(splitted[1]+" "+splitted[0]+", "+splitted[2]);
+    /*
     var updateMessage = "";
     if(last_update-yesterday<0){
         if(!addRequested){
-            updateMessage = <Alert severity="warning">Outdated? Ask for an <Button onClick={()=>{add_company_to_requested(props.report[0].id).then(function(res){setAddRequested(res.success);})}}>UPDATE</Button> to last daily close.</Alert>
+            updateMessage = <Alert severity="warning">Outdated? Ask for an <Button onClick={()=>{add_company_to_requested(props.report.id).then(function(res){setAddRequested(res.success);})}}>UPDATE</Button> to last daily close.</Alert>
         }else{
             updateMessage = <Alert severity="success">Thanks! Your request was submitted. Come back later!</Alert>
         }
-    }
-    if (props.report.length > 0){
+    }*/
+
+    if (Object.keys(props.report).length>0){
         return (
             
             <Grid container spacing={2} padding={2}>
                 
-                <Grid item xs={3}></Grid>
-                <Grid item xs={6} align="left" ><b>{props.report[0].id}</b>
+                
+                <Grid item xs={12} align="left" ><b>{props.report.id}</b>
                 </Grid>
-                <Grid item xs={3}></Grid>
+                
 
-                <Grid item xs={3}></Grid>
-                <Grid item xs={6} align="left" ><i>Last updated: {props.report[0].lastUpdate}</i>{updateMessage}
+                
+                <Grid item xs={12} align="left" ><i><Alert severity="warning">Last updated: {props.report.lastUpdate}</Alert></i>
                 </Grid>
-                <Grid item xs={3}></Grid>
+                
 
-                <Grid item xs={3}></Grid>
-                <Grid item xs={3} align="left">
+                
+                <Grid item xs={6} align="left">
                     
                     <Grid item xs={12}>
 
@@ -222,12 +164,12 @@ export function ReportHTML(props){
                         
                         <Grid item xs={12} >
                             <List>
-                                {printListItem(props.report[0].sales)}
-                                {printListItem(props.report[0].assets)}
-                                {printListItem(props.report[0].debt)}
-                                {printListItem(props.report[0].pe)}
-                                {printListItem(props.report[0].pb)}
-                                {printListItem(props.report[0].ncavps)}
+                                {printListItem(props.report.sales)}
+                                {printListItem(props.report.assets)}
+                                {printListItem(props.report.debt)}
+                                {printListItem(props.report.pe)}
+                                {printListItem(props.report.pb)}
+                                {printListItem(props.report.ncavps)}
                             </List>
                         </Grid>
 
@@ -238,8 +180,8 @@ export function ReportHTML(props){
 
                         <Grid item xs={12}>
                             <List>
-                                {printListItem(props.report[0].zScore)}
-                                {printListItem(props.report[0].fScore)}
+                                {printListItem(props.report.zScore)}
+                                {printListItem(props.report.fScore)}
                             </List>
                         </Grid>
 
@@ -249,11 +191,11 @@ export function ReportHTML(props){
 
                         <Grid item xs={12} >
                             <List>
-                                {printListItem(props.report[0].price)}
-                                {printListItem(props.report[0].realizedPrice, "https://www.pisciottablog.com/2022/07/14/pseudo-realized-price/")}
-                                {printListItem(props.report[0].dcf)}
-                                {printListItem(props.report[0].graham)}
-                                {printListItem(props.report[0].low)}
+                                {printListItem(props.report.price)}
+                                {printListItem(props.report.realizedPrice, "https://www.pisciottablog.com/2022/07/14/pseudo-realized-price/")}
+                                {printListItem(props.report.dcf)}
+                                {printListItem(props.report.graham)}
+                                {printListItem(props.report.low)}
                             </List>
                         </Grid>     
 
@@ -264,38 +206,14 @@ export function ReportHTML(props){
                     
                     
                 </Grid>
-                <Grid item xs={3}>
-                
-                <SectionTitleHTML label="Correlation Analysis" />
-                <Grid item xs={12} align="left">
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 2, md: 1 }}>
-                        <div>Correlate with</div> 
-                        <Autocomplete sx={{ width: 110}} onChange={(event, value) => {setCorrTicker(value); setCorrResult(null)}} disablePortal options={props.symbols}  renderInput={(params) => <TextField {...params} label="" variant="standard" size="small"  />} />
-                        { !loading && <DoubleArrowOutlinedIcon sx={{ cursor:"pointer"}} onClick={() => {setLoading(true); correlate(props.report[0].id, corrTicker).then(function(res){setCorrResult(res); setLoading(false)})} }/> }
-                        { loading && <TailSpin  height="20px" fill="#3c3c3c" stroke="#4c4c4c" speed="1" fillOpacity="1" strokeOpacity="1" strokeWidth="2"/> }
-                        
-                    </Stack>
-                </Grid>
-                <Grid item xs={12} align="left">
-                    { corrResult && <CorrResultHTML corrResult={corrResult} t1={props.report[0].id} t2={corrTicker} />}              
-                    <br/>
-                            
-                </Grid>
-                <SectionTitleHTML label="Statistical Analysis" />
-                        <Grid item xs={12} align="left">
-                        
-                        <StatsHTML props={props} />
-                            
-
-                           
-                        </Grid>
+                <Grid item xs={6}>
+                    <SectionTitleHTML label="Statistical Analysis" />
+                    <Grid item xs={12} align="left">
+                        <StatsHTML props={props} /> 
+                    </Grid>
                 </Grid>
                 
-                <Grid item xs={3}></Grid>
-
-
-
-
+                
             </Grid>
 
             
@@ -305,20 +223,20 @@ export function ReportHTML(props){
         return null;
     }
 
-    return <div>HELLO {props.report.length > 0 && props.report[0].A}</div>;
+
 
 }
 
 export function ReportBar(props){
-    props.onClick(); // simulate click on button (removed now, but can be introduced later!)
+    //props.onClick(); // simulate click on button (removed now, but can be introduced later!)
     return (
         <Grid container spacing={2} sx={{ pl: 2, pr: 2, pt: 0, pb: 0 }}>
-            <Grid item xs={3}></Grid>
-            <Grid item xs={6}>
+
+            <Grid item xs={12}>
             Give us a <Link target="_blank"  rel="noreferrer" href="https://docs.google.com/forms/d/e/1FAIpQLScjSStoElTDkQxaEBg5OvyVmoZRQwNg26M90DDVE5YZaQmR3Q/viewform?usp=sf_link">feedback</Link> to request new features or report problems.
             </Grid>
             
-            <Grid item xs={3}></Grid>
+
         </Grid>
     );
 }
